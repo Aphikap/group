@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"example.com/sa-example2/entity"
-	"github.com/gin-gonic/gin"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -85,47 +84,20 @@ func SetupDatabase() {
 		log.Println("เพิ่มผู้ขายสำเร็จ:", newSeller)
 	}
 
-}
-
-func CreateShopProfile(c *gin.Context) {
-	var input struct {
-		ShopName        string             `json:"shop_name" binding:"required"`
-		Slogan          string             `json:"slogan" binding:"required"`
-		ShopDescription string             `json:"shop_description" binding:"required"`
-		LogoPath        string             `json:"logo_path" binding:"required"`
-		Address         entity.ShopAddress `json:"address" binding:"required"`
-		CategoryID      uint               `json:"shopCategoryID" binding:"required"`
-		SellerID        uint               `json:"seller_id" binding:"required"`
+	categoriesProduct := []entity.Category{
+		{Name: "เสื้อผ้าแฟชั่น"},
+		{Name: "อิเล็กทรอนิก"},
+		{Name: "อาหาร"},
+		{Name: "ของใช้จำเป็น"},
+		{Name: "เกมมิ่งเกียร์"},
 	}
 
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
-		return
+	for _, cat := range categoriesProduct {
+		result := db.FirstOrCreate(&cat, entity.Category{Name: cat.Name})
+		if result.Error != nil {
+			log.Println("เพิ่ม Category สินค้าล้มเหลว:", result.Error)
+		} else {
+			fmt.Println("เพิ่ม Category สินค้า:", cat.Name)
+		}
 	}
-
-	// สร้าง Address ก่อน
-	tx := db.Begin()
-	if err := tx.Create(&input.Address).Error; err != nil {
-		tx.Rollback()
-		// handle error
-	}
-
-	// สร้าง ShopProfile โดยเชื่อม AddressID
-	shop := entity.ShopProfile{
-		ShopName:        input.ShopName,
-		Slogan:          input.Slogan,
-		ShopDescription: input.ShopDescription,
-		LogoPath:        input.LogoPath,
-		AddressID:       &input.Address.ID,
-		ShopCategoryID:  &input.CategoryID,
-		SellerID:        &input.SellerID,
-	}
-
-	if err := tx.Create(&shop).Error; err != nil {
-		tx.Rollback()
-		// handle error
-	}
-
-	c.JSON(200, gin.H{"data": shop})
-	tx.Commit()
 }

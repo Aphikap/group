@@ -1,47 +1,74 @@
-import React from 'react'
+
+import useEcomStore from '../../store/ecom-store';
 import './navbar.css'
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 const Navbar = () => {
+  const token = useEcomStore((state: any) => state.token)
+  const hasShop = useEcomStore((state: any) => state.hasShop)
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    if (hasShop) {
+      navigate('/user/Profile'); // ไปหน้าโปรไฟล์ร้านค้า
+    } else {
+      navigate('/user/Create-profile'); // ไปหน้าสร้างร้านค้า
+    }
+
+  };
+  const handleLogout = () => {
+    // ✅ ล้างข้อมูลจาก store
+    useEcomStore.getState().clearPersistedStore();
+
+    // ✅ กลับไปหน้าแรก
+    navigate('/');
+  };
   return (
     <div className="background-header">
       <div className="header-row">
         <div className="header-left">
-          <Link  to="/product-list" className="no-border-button left-font-size-large">
+          <Link to="/product-list" className="no-border-button left-font-size-large">
 
             <button className="no-border-button left-font-size-large">
               Seller Centre
             </button>
           </Link>
           <span>|</span>
+          {token &&(
 
-           <Link  to="/Create-profile" className="no-border-button left-font-size-large">
 
-            <button className="no-border-button left-font-size-large">
-            Start Selling
-          </button>
-          </Link>
-         
-          <span>|</span>
-
-          <Link  to="/Profile" className="no-border-button left-font-size-large">
-
-            <button className="no-border-button left-font-size-large">
+          <button
+            onClick={handleClick}
+            className="no-border-button left-font-size-large"
+          >
             ShopProfile
+            <span>|</span>
           </button>
-          </Link>
-         
-          <span>|</span>
-          <span className="left-font-size-large">Follow us on</span>
+          )}
+
+          {token &&
+            (
+              <button onClick={handleLogout}
+                className="no-border-button left-font-size-large"
+              >
+                Logout
+              </button>
+            )
+          }
+
         </div>
 
         <div className="header-right">
-          <Link  to="/" className="no-border-button left-font-size-large">
+          {!token &&(
 
-          <button className="no-border-button left-font-size-large">
-            Login/Register
-          </button>
+          <Link to="/login" className="no-border-button left-font-size-large">
+
+            <button className="no-border-button left-font-size-large">
+              Login/Register
+            </button>
           </Link>
-       
+
+          )}
+
           <button className="no-border-button left-font-size-large">
             Help
           </button>

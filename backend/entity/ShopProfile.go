@@ -8,18 +8,18 @@ import (
 
 type ShopProfile struct {
 	gorm.Model
-	ShopName        string    `gorm:"type:varchar(255);not null" json:"shop_name"`
+	ShopName        string    `gorm:"type:varchar(255);not null;unique" json:"shop_name"`
 	ShopDescription string    `gorm:"type:varchar(500);not null" json:"shop_description"`
 	OpenDate        time.Time `gorm:"type:date;not null" json:"open_date"`
 	LogoPath        string    `gorm:"type:varchar(255);not null" json:"logo_path"`
 	Slogan          string    `gorm:"type:varchar(255);not null" json:"slogan"`
 
-	AddressID  *uint `json:"address_id"`
+	AddressID   *uint        `json:"address_id"`
 	ShopAddress *ShopAddress `gorm:"foreignKey:AddressID;references:ID"`
 
-	ShopCategoryID *uint `json:"shopCategoryID"`
-	Category    ShopCategory `gorm:"foreignKey:ShopCategoryID"`
- 
-	SellerID *uint `json:"seller_id"`
-	Seller    *Seller `gorm:"foreignKey:SellerID;references:ID"`
+	ShopCategoryID *uint        `json:"shopCategoryID"`
+	Category       ShopCategory `gorm:"foreignKey:ShopCategoryID"`
+
+	SellerID *uint   `gorm:"unique" json:"seller_id"`
+	Seller   *Seller `gorm:"foreignKey:SellerID;references:ID"`
 }

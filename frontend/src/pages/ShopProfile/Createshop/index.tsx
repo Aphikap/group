@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import UploadLogo from './UploadLogo';
 import { Divider, Col, Row, Button, Form, Input, message, Radio } from 'antd';
 import { ShoppingCartOutlined, UploadOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import './index.css';
 import { useForm } from 'antd/es/form/Form';
 import type { RcFile } from 'antd/es/upload';
@@ -9,58 +10,80 @@ import type { ShopProfilePayload } from '../../../../interfaces/ShopProfilePaylo
 
 
 import axios from 'axios';
+import useEcomStore from '../../../store/ecom-store';
 
 function ShopProfileForm() {
+  const user = useEcomStore((s: any) => s.user);
+  const navigate = useNavigate();
   const [form] = useForm();
   const [logoFile, setLogoFile] = useState<RcFile | null>(null);
+const [messageApi, contextHolder] = message.useMessage();
 
-  const onFinish = async (values: any) => {
-    if (!logoFile) {
-      message.error('กรุณาอัปโหลดภาพโลโก้');
-      return;
+
+
+  const hasShop = useEcomStore((state:any) => state.hasShop);
+
+  useEffect(() => {
+    if (hasShop) {
+      message.warning("คุณมีร้านค้าอยู่แล้ว");
+      navigate("/user"); // หรือ path ที่คุณต้องการ
     }
+  }, [[hasShop]]);
 
-    try {
+ const onFinish = async (values: any) => {
+  if (!logoFile) {
+    messageApi.error('กรุณาอัปโหลดภาพโลโก้');
+    return;
+  }
 
-      const formData = new FormData();
-      formData.append('file', logoFile);
+  try {
+    const formData = new FormData();
+    formData.append('file', logoFile);
 
-      const res = await axios.post('http://localhost:8080/api/upload-logo', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+    const res = await axios.post('http://localhost:8080/api/upload-logo', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
 
-      const imageUrl = res.data.url;
+    const imageUrl = res.data.url;
 
-      values.image = imageUrl;
-      const payload: ShopProfilePayload = {
-        shop_name: values.shop_name,
-        slogan: values.slogan,
-        shop_description: values.shop_description,
-        logo_path: imageUrl,
-        address: {
-          address: values.address,
-          sub_district: values.sub_district,
-          district: values.district,
-          province: values.province,
-        },
-        category_id: Number(values.shopCategoryID),  // เปลี่ยนชื่อเป็น category_id
-        seller_id: 1,
-      };
+    const payload: ShopProfilePayload = {
+      shop_name: values.shop_name,
+      slogan: values.slogan,
+      shop_description: values.shop_description,
+      logo_path: imageUrl,
+      address: {
+        address: values.address,
+        sub_district: values.sub_district,
+        district: values.district,
+        province: values.province,
+      },
+      category_id: Number(values.shopCategoryID),
+      seller_id: user.id,
+    };
 
+    console.log('ส่งฟอร์มพร้อม:', payload);
+    await axios.post('http://localhost:8080/api/shop-profiles', payload);
 
-      console.log('ส่งฟอร์มพร้อม:', values);
-      await axios.post('http://localhost:8080/api/shop-profiles', payload)
+    messageApi.success('ส่งฟอร์มสำเร็จ');
+    useEcomStore.getState().hasShop = true;
+    navigate('/user/profile'); // ✅ เปลี่ยนหน้าหลังจากสำเร็จ
+  } catch (error: any) {
+  if (axios.isAxiosError(error)) {
+    const errMsg = error.response?.data?.error || 'เกิดข้อผิดพลาดขณะสร้างร้านค้า';
+    console.error('API Error:', errMsg);
+    messageApi.error(errMsg);  // ✅ แสดงข้อความจาก backend
+  } else {
+    console.error('Unknown Error:', error);
+    messageApi.error('เกิดข้อผิดพลาดไม่ทราบสาเหตุ');
+  }
+}
 
-      message.success('ส่งฟอร์มสำเร็จ');
-    } catch (error) {
-      console.error('อัปโหลดโลโก้ล้มเหลว:', error);
-      message.error('อัปโหลดโลโก้ไม่สำเร็จ');
-    }
-  };
+};
+
 
   return (
     <>
-      
+      {contextHolder}
       <div className="container">
         
 

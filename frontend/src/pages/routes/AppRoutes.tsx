@@ -1,4 +1,4 @@
-import React from "react";
+
 import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import PostProduct from "../post-product";
 import Shopprofile from "../ShopProfile/Createshop";
@@ -7,6 +7,7 @@ import Profile from "../ShopProfile/Profile";
 import Layout from "../layout/Layout";
 import RegisterForm from "../authentication/Register";
 import LoginForm from "../authentication/Login";
+import ProtectRouteUser from "./ProtectRouteUser";
 
 const demoProducts = [
   { id: 1, name: "เสื้อเชิ้ตผู้ชาย", category: "เสื้อผ้าแฟชั่น", price: 350, image: "/img2.jpg" },
@@ -19,14 +20,20 @@ const router = createBrowserRouter([
     path: "/",
     element: <Layout />,
     children: [
-      // หน้าแรกให้เป็น index route แทนการใส่ path: "/"
-      { index: true, element: <LoginForm /> },
-
-      // ใช้ชื่อ path ให้คงที่/เป็นตัวเล็กทั้งหมด
+      { index: true, element: <Productlist /> },
+      { path: "login", element: <LoginForm /> },
+      
+      { path: "register", element: <RegisterForm /> },
+      { path: "*", element: <Navigate to="/" replace /> },
+    ],
+  },
+  {
+    path: "/user",
+    element: <ProtectRouteUser element={<Layout />} />,
+    children: [
+      { index: true, element: <Productlist /> },
       { path: "create-post", element: <PostProduct /> },
       { path: "create-profile", element: <Shopprofile /> },
-      { path: "product-list", element: <Productlist /> },   // ✅ แก้ชื่อสวยและจำง่าย
-      { path: "register", element: <RegisterForm /> },
       {
         path: "profile",
         element: (
@@ -40,12 +47,11 @@ const router = createBrowserRouter([
           />
         ),
       },
-
-      // not found ในระดับ children
-      { path: "*", element: <Navigate to="/" replace /> },
+      { path: "*", element: <Navigate to="/user" replace /> },
     ],
   },
 ]);
+
 
 export default function AppRoutes() {
   return <RouterProvider router={router} />;

@@ -97,7 +97,7 @@ func LoginSeller(c *gin.Context) {
 	var s entity.Seller
 	if err := db.Where("username = ?", req.Username).First(&s).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "seller not found"})
+			c.JSON(http.StatusBadRequest, gin.H{"message": "user not found"})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "db error"})

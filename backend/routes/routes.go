@@ -3,8 +3,10 @@ package routes
 import (
 	"time"
 
-	"example.com/sa-example2/config" // เปลี่ยนตามโมดูลคุณ
+	// เปลี่ยนตามโมดูลคุณ
 	"example.com/sa-example2/controller"
+	middleware "example.com/sa-example2/middlewares"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -27,15 +29,15 @@ func SetupRouter() *gin.Engine {
 	api := r.Group("/api")
 	{
 		api.POST("/upload-logo", controller.UploadLogo)
+		api.POST("/upload-Product", controller.UploadProductImages)
 		// เพิ่ม API routes อื่น ๆ ที่นี่
-		api.POST("/shop-profiles", config.CreateShopProfile)
+		api.POST("/shop-profiles", controller.CreateShopProfile)
+		api.POST("/post-Product", controller.CreateProduct)
 
 		//register login
-		api.POST("/register",controller.RegisterSeller)
-		api.POST("/login",controller.LoginSeller)
-		api.GET("/current-user",controller.CurrentSeller)
-		
-		
+		api.POST("/register", controller.RegisterSeller)
+		api.POST("/login", controller.LoginSeller)
+		api.GET("/current-user", middleware.AuthGuard(), controller.CurrentSeller)
 
 	}
 

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Button, Card, Form, Input, message, Row, Col, Typography } from "antd";
 import type { LoginRequest } from "../../../interfaces/Login";
-import axios from "axios";
-import { Link } from "react-router-dom";
+
 import { useNavigate } from "react-router-dom";
+import useEcomStore from "../../store/ecom-store";
 
 
 
@@ -13,39 +13,65 @@ export default function LoginForm() {
     const [messageApi, contextHolder] = message.useMessage();
     const [loading, setLoading] = useState(false);
 
+    const actionLogin = useEcomStore((state: any) => state.actionLogin)
+    const user = useEcomStore((state: any) => state.token)
+    console.log('user form zustand', user)
+
     const onFinish = async (values: LoginRequest) => {
         setLoading(true);
-
         try {
-            const res = await axios.post("http://localhost:8080/api/login", values, {
-                headers: { "Content-Type": "application/json" },
-            });
+            const { res, hasShop } = await actionLogin(values)
+            console.log("res:", res)
+            console.log("hasShop:", hasShop)
 
-            if (res.data?.token) {
-
-                localStorage.setItem("token", res.data.token);
-                localStorage.setItem("username", res.data.username || values.username);
-                localStorage.setItem("id", String(res.data.payload.id));
-
-                // โชว์ข้อความแล้วค่อย navigate (ไม่ต้อง setTimeout)
-                messageApi.success({
-                    content: "Login success!",
-                    duration: 1.2,
-                    onClose: () => navigate("/product-list"), // <-- เปลี่ยน path ให้ตรง route ของคุณ
-                });
-            } else {
-                messageApi.error("Unexpected response from server");
-            }
-        } catch (err: any) {
-            const msg =
-                err?.response?.data?.message ||
-                err?.response?.data?.error ||
-                "Login failed";
-            messageApi.error(msg);
-        } finally {
-            setLoading(false);
+            messageApi.success('Welcom back')
+            navigate('/user');
         }
-    };
+        catch (err: any) {
+
+            const errMsg = err.response?.data?.message
+            messageApi.error(errMsg)
+        }
+        finally {
+            await new Promise((resolve) => setTimeout(resolve, 200));
+            setLoading(false);
+            
+        }
+
+    }
+    // const onFinish = async (values: LoginRequest) => {
+    //     setLoading(true);
+
+    //     try {
+    //         const res = await axios.post("http://localhost:8080/api/login", values, {
+    //             headers: { "Content-Type": "application/json" },
+    //         });
+
+    //         if (res.data?.token) {
+
+    //             localStorage.setItem("token", res.data.token);
+    //             localStorage.setItem("username", res.data.username || values.username);
+    //             localStorage.setItem("id", String(res.data.payload.id));
+
+    //             // โชว์ข้อความแล้วค่อย navigate (ไม่ต้อง setTimeout)
+    //             messageApi.success({
+    //                 content: "Login success!",
+    //                 duration: 1.2,
+    //                 onClose: () => navigate("/product-list"), // <-- เปลี่ยน path ให้ตรง route ของคุณ
+    //             });
+    //         } else {
+    //             messageApi.error("Unexpected response from server");
+    //         }
+    //     } catch (err: any) {
+    //         const msg =
+    //             err?.response?.data?.message ||
+    //             err?.response?.data?.error ||
+    //             "Login failed";
+    //         messageApi.error(msg);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
 
     return (
         <>

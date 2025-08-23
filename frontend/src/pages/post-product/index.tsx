@@ -1,31 +1,77 @@
 import Uploadimage from './Uploadimage';
-import { Divider, Checkbox, Col, Row, Button, Form, Input, message } from 'antd';
+import { Divider, Checkbox, Col, Row, Button, Form, Input, message, Radio } from 'antd';
 import { ShoppingCartOutlined, UploadOutlined } from '@ant-design/icons';
 import './index.css'
 import { useForm } from 'antd/es/form/Form';
+import type { RcFile } from 'antd/es/upload';
+import { useState } from 'react';
+import axios from 'axios';
+import type { PostProductPayload } from '../../../interfaces/PostProductPayload';
+import useEcomStore from '../../store/ecom-store';
+
 
 function PostProduct() {
     const [form] = useForm();
+    const seller = useEcomStore((state: any) => state.user); // ดึง seller
+    const seller_id = seller?.id;
+    const [files, setFiles] = useState<RcFile[]>([]); // ⬅️ เก็บรูปไว้ก่อน
 
-
-    const handleUploadSuccess = (urls: string[]) => {
-        form.setFieldsValue({ image: urls });
+    const handleFileSelect = (selectedFiles: RcFile[]) => {
+        setFiles(selectedFiles);
     };
 
-    const onFinish = (values: any) => {
-
-        if (!values.image || values.image.length === 0) {
-            message.error("กรุณาอัปโหลดภาพอย่างน้อย 1 รูป");
+    const onFinish = async (values: Omit<PostProductPayload, 'images'>) => {
+        if (!seller_id) {
+            message.error('ไม่พบผู้ขาย (seller_id)');
             return;
         }
-        console.log("ส่งฟอร์มพร้อม:", values);
+        if (files.length === 0) {
+            message.error('กรุณาอัปโหลดภาพอย่างน้อย 1 รูป');
+            return;
+        }
+
+        try {
+            // 1) อัปโหลดหลายไฟล์ครั้งเดียว → key ต้องชื่อ 'files'
+            const fd = new FormData();
+            files.forEach(f => fd.append('files', f));
+
+            const up = await axios.post(
+                'http://localhost:8080/api/upload-Product', // ตรงกับ routes.go
+                fd,
+                { headers: { 'Content-Type': 'multipart/form-data' } }
+            );
+
+            const imageUrls: string[] = up.data?.urls || [];
+
+            // 2) เตรียม payload ให้ครบ type และแปลง number ให้ชัวร์
+            const payload: PostProductPayload = {
+                product_name: values.product_name,
+                description: values.description,
+                price: Number(values.price),
+                quantity: Number(values.quantity),
+                category_id: Number((values as any).category_id ?? (values as any).category), // เผื่อชื่อฟิลด์ยังเป็น category
+                seller_id: Number(seller_id),
+                images: imageUrls,
+            };
+
+            console.log('ส่ง:', payload);
+            await axios.post('http://localhost:8080/api/post-Product', payload);
+
+            message.success('บันทึกสำเร็จ');
+            form.resetFields();
+            setFiles([]);
+        } catch (err: any) {
+            console.log('UPLOAD/POST ERR:', err.response?.data || err.message);
+            message.error(err.response?.data?.error || 'อัปโหลดหรือบันทึกล้มเหลว');
+        }
     };
+
 
     return (
         <>
-           
+
             <div className="container">
-               
+
 
                 <div>
                     <div>
@@ -43,7 +89,7 @@ function PostProduct() {
                             >
                                 <Form.Item
 
-                                    name="image"
+                                    name="upload_images"
                                     style={{ marginLeft: '100px' }}
                                     rules={[
                                         {
@@ -56,7 +102,7 @@ function PostProduct() {
                                 >
                                     <div style={{ display: 'flex', marginRight: '0px' }}>
                                         <h4 style={{ marginRight: '15px' }}>ภาพสินค้า</h4>
-                                        <Uploadimage onUploadSuccess={handleUploadSuccess} />
+                                        <Uploadimage onFileSelect={handleFileSelect} />
                                     </div>
                                 </Form.Item>
 
@@ -86,18 +132,18 @@ function PostProduct() {
                                     <div>
                                         <Form.Item
                                             label={<h4>หมวดหมู่สินค้า</h4>}
-                                            name="category"
+                                            name="category_id" // เปลี่ยนจาก category
                                             rules={[{ required: true, message: 'กรุณาเลือกหมวดหมู่สินค้า' }]}
                                         >
-                                            <Checkbox.Group>
+                                            <Radio.Group>
                                                 <Row>
-                                                    <Col span={12}><Checkbox value="A">เสื้อผ้าแฟชั่น</Checkbox></Col>
-                                                    <Col span={12}><Checkbox value="B">อิเล็กทรอนิก</Checkbox></Col>
-                                                    <Col span={12}><Checkbox value="C">อาหาร</Checkbox></Col>
-                                                    <Col span={12}><Checkbox value="D">ของใช้จำเป็น</Checkbox></Col>
-                                                    <Col span={12}><Checkbox value="E">เกมมิ่งเกียร์</Checkbox></Col>
+                                                    <Col span={12}><Radio value={1}>เสื้อผ้าแฟชั่น</Radio></Col>
+                                                    <Col span={12}><Radio value={2}>อิเล็กทรอนิก</Radio></Col>
+                                                    <Col span={12}><Radio value={3}>อาหาร</Radio></Col>
+                                                    <Col span={12}><Radio value={4}>ของใช้จำเป็น</Radio></Col>
+                                                    <Col span={12}><Radio value={5}>เกมมิ่งเกียร์</Radio></Col>
                                                 </Row>
-                                            </Checkbox.Group>
+                                            </Radio.Group>
                                         </Form.Item>
                                     </div>
                                 </div>

@@ -62,7 +62,7 @@ const ShopProfile: React.FC<ShopProfileProps> = ({
             ))}
           </div>
           <br />
-          <Link to="/create-post" className="btn-action">
+          <Link to="/user/create-post" className="btn-action">
             <h3>ลงประกาศขายสินค้า</h3>
           </Link>
         </div>

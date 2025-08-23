@@ -11,6 +11,12 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+type MyClaims struct {
+	ID       uint   `json:"id"`
+	Username string `json:"username"`
+	jwt.RegisteredClaims
+}
+
 func AuthGuard() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		h := c.GetHeader("Authorization")
@@ -19,9 +25,11 @@ func AuthGuard() gin.HandlerFunc {
 			return
 		}
 		tokenStr := strings.TrimPrefix(h, "Bearer ")
-		secret := os.Getenv("SECRET")
 
-		token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
+		secret := os.Getenv("SECRET")
+		claims := &MyClaims{}
+
+		token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) {
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, jwt.ErrTokenUnverifiable
 			}
@@ -32,23 +40,11 @@ func AuthGuard() gin.HandlerFunc {
 			return
 		}
 
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "invalid claims"})
-			return
-		}
-
-		// เก็บลง context
-		if v, ok := claims["username"].(string); ok {
-			c.Set("username", v)
-		}
-		if v, ok := claims["id"].(float64); ok {
-			c.Set("id", uint(v))
-		}
-
+		// ผ่านแล้ว → set ลง context
+		c.Set("username", claims.Username)
+		c.Set("id", claims.ID)
 		c.Next()
 	}
-
 }
 
 func SellerOnly() gin.HandlerFunc {

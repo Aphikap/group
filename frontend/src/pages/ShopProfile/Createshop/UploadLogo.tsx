@@ -1,83 +1,61 @@
 import React, { useState } from 'react';
-import { PlusOutlined } from '@ant-design/icons';
-import { Upload, Image } from 'antd';
-import type { UploadFile } from 'antd';
-import type { RcFile } from 'antd/es/upload';
+import { Upload } from 'antd';
+import ImgCrop from 'antd-img-crop';
+import type { RcFile, UploadFile } from 'antd/es/upload';
 
 interface UploadLogoProps {
-  onFileChange: (file: RcFile | null) => void; // ส่งไฟล์ขึ้น parent (ยังไม่อัปโหลด)
+  onFileChange: (file: RcFile | null) => void;
 }
 
 const UploadLogo: React.FC<UploadLogoProps> = ({ onFileChange }) => {
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewImage, setPreviewImage] = useState('');
   const [fileList, setFileList] = useState<UploadFile[]>([]);
 
-  const getBase64 = (file: File) =>
-    new Promise<string>((resolve, reject) => {
+  const getBase64 = (file: RcFile): Promise<string> =>
+    new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => resolve(reader.result as string);
       reader.onerror = (error) => reject(error);
     });
 
-  const handlePreview = async (file: UploadFile) => {
-    if (!file.url && !file.preview && file.originFileObj) {
-      file.preview = await getBase64(file.originFileObj as File);
+  const onPreview = async (file: UploadFile) => {
+    let src = file.url || file.thumbUrl!;
+    if (!src && file.originFileObj) {
+      src = await getBase64(file.originFileObj as RcFile);
     }
-    setPreviewImage(file.url || (file.preview as string));
-    setPreviewOpen(true);
-  };
-
-  // ตรงนี้แค่เก็บไฟล์ไว้ใน state และส่งไฟล์กลับ parent
-  const beforeUpload = (file: RcFile) => {
-    setFileList([{
-      uid: file.uid,
-      name: file.name,
-      status: 'done',
-      url: URL.createObjectURL(file), // แสดง preview ทันที
-      originFileObj: file,
-    }]);
-    onFileChange(file); // ส่งไฟล์กลับ parent เพื่อเก็บไว้ใน state
-    return false; // ป้องกัน auto upload ของ antd
-  };
-
-  const handleRemove = () => {
-    setFileList([]);
-    onFileChange(null);
-    setPreviewImage('');
+    const image = new Image();
+    image.src = src;
+    const imgWindow = window.open(src);
+    imgWindow?.document.write(image.outerHTML);
   };
 
   return (
-    <>
+    <ImgCrop rotationSlider>
       <Upload
         listType="picture-card"
         fileList={fileList}
-        beforeUpload={beforeUpload}
-        onRemove={handleRemove}
-        onPreview={handlePreview}
-        accept="image/*"
+        beforeUpload={async (file) => {
+          const preview = await getBase64(file); // แปลงเป็น base64
+          const newFile: UploadFile = {
+            uid: file.uid,
+            name: file.name,
+            status: 'done',
+            originFileObj: file,
+            thumbUrl: preview, // ❗ ใส่ภาพให้แสดง
+          };
+          setFileList([newFile]);
+          onFileChange(file);
+          return false;
+        }}
+        onPreview={onPreview}
+        onRemove={() => {
+          setFileList([]);
+          onFileChange(null);
+        }}
       >
-        {fileList.length >= 1 ? null : (
-          <div>
-            <PlusOutlined />
-            <div style={{ marginTop: 8 }}>Upload Logo</div>
-          </div>
-        )}
+        {fileList.length === 0 && '+ Upload'}
       </Upload>
-
-      {previewImage && (
-        <Image
-          wrapperStyle={{ display: 'none' }}
-          preview={{
-            visible: previewOpen,
-            onVisibleChange: (visible) => setPreviewOpen(visible),
-            afterOpenChange: (visible) => !visible && setPreviewImage(''),
-          }}
-          src={previewImage}
-        />
-      )}
-    </>
+    </ImgCrop>
   );
 };
 
