@@ -28,11 +28,24 @@ func SetupRouter() *gin.Engine {
 
 	api := r.Group("/api")
 	{
+		//upload
 		api.POST("/upload-logo", controller.UploadLogo)
 		api.POST("/upload-Product", controller.UploadProductImages)
-		// เพิ่ม API routes อื่น ๆ ที่นี่
+
+		// เพิ่ม Create
 		api.POST("/shop-profiles", controller.CreateShopProfile)
 		api.POST("/post-Product", controller.CreateProduct)
+
+		//ดึงข้อมูล
+		api.GET("/listAllProducts",controller.ListAllProducts)
+		api.GET("/ListMyPostProducts",middleware.AuthGuard(),controller.ListMyPostProducts)
+		api.GET("/ListMyProfile",middleware.AuthGuard(),controller.ListMyProfile)
+		
+
+		//update
+		api.PUT("/UpdateShopProfile",middleware.AuthGuard(),controller.UpdateShopProfile)
+
+
 
 		//register login
 		api.POST("/register", controller.RegisterSeller)

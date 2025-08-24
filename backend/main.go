@@ -17,10 +17,11 @@ func main() {
 
 	// open connection database
 	config.ConnectionDB()
-
+	
 	// Generate databases
 	config.SetupDatabase()
 	r := routes.SetupRouter()
+	
 	r.Run(":8080")
 
 }

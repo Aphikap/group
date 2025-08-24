@@ -1,26 +1,34 @@
 
 import { ShoppingCartOutlined } from '@ant-design/icons';
 import './Productlist.css'
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getAllproducts } from '../../../api/auth';
 function ProductList() {
-   const products = [
-      { src: "/img1.jpg", description: "สินค้า A", price: "100 บาท" },
-      { src: "/img2.jpg", description: "สินค้า B", price: "150 บาท" },
-      { src: "/img3.jpg", description: "สินค้า C", price: "200 บาท" },
-      { src: "/img4.jpg", description: "สินค้า D", price: "300 บาท" },
-      { src: "/img5.png", description: "สินค้า E", price: "180 บาท" },
-      { src: "/img6.png", description: "สินค้า F", price: "250 บาท" },
-      { src: "/img7.png", description: "สินค้า G", price: "220 บาท" },
-      { src: "/img8.png", description: "สินค้า H", price: "310 บาท" },
-   ];
-   const categories = ["ทั้งหมด", "ผู้หญิง", "ผู้ชาย", "แฟชั่น"];
+
+   const [products, setProducts] = useState<any[]>([]);
    const [selectedCategory, setSelectedCategory] = useState("ทั้งหมด");
+   const categories = ["ทั้งหมด", "ผู้หญิง", "ผู้ชาย", "แฟชั่น"];
+
+   useEffect(() => {
+      const fetchData = async () => {
+         try {
+            const res = await getAllproducts();
+            console.log(res);
+            setProducts(res.data?.data || []);
+         } catch (err) {
+            console.error("โหลดสินค้าล้มเหลว:", err);
+         }
+      };
+      fetchData();
+   }, []);
+
+
 
 
    return (
       <>
          <div className='containerlist'>
-           
+
             <nav>
                <ul style={{ display: "flex", gap: "16px", listStyle: "none", padding: 0 }}>
                   {categories.map((cat) => (
@@ -41,30 +49,43 @@ function ProductList() {
             </nav>
             <section>
                <div className="image-grid">
-                  {products.map((product, idx) => (
-                     <div className='image' key={idx}>
-                        <img
-                           src={product.src}
-                           alt={`image-${idx}`}
-                           style={{
-                              width: "184px",
-                              height: "184px",
-                              objectFit: "cover",
-                              border: "1px solid black",
-                           }}
-                        />
-                        <br />
-                        <p>{product.description}</p>
+                  {products.map((product, idx) => {
+                     const imageUrl = `http://localhost:8080${product?.Product?.ProductImage?.[0]?.image_path}`;
 
 
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                           <p style={{ margin: 0 }}>{product.price}</p>
-                           <ShoppingCartOutlined />
+
+                     const name = product?.Product?.name || "ไม่มีชื่อสินค้า";
+                     const price = product?.price || 0;
+                     const quantity = product?.quantity || 0;
+
+                     return (
+                        <div className="image" key={idx}>
+                           <img
+                              src={imageUrl}
+                              alt={`product-${idx}`}
+                              style={{
+                                 width: "184px",
+                                 height: "184px",
+                                 objectFit: "cover",
+                                 border: "1px solid black",
+                              }}
+                           />
+                           <br />
+                           <p>{name}</p>
+
+                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <p style={{ margin: 0 }}>{price} บาท</p>
+                              <ShoppingCartOutlined />
+                           </div>
+
+                           <p style={{ marginTop: "4px", fontSize: "0.9rem", color: "#555" }}>
+                              คงเหลือ: {quantity}
+                           </p>
                         </div>
-                     </div>
-                  ))}
-
+                     );
+                  })}
                </div>
+
             </section>
          </div>
       </>

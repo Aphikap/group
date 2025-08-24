@@ -53,36 +53,8 @@ func SetupDatabase() {
 		}
 	}
 
-	// เพิ่มผู้ขายตัวอย่าง
-	seller := entity.Seller{
-		Username:    "seller01",
-		Password:    "password123", // ควร hash ก่อนเก็บจริง
-		PhoneNumber: "0801234567",
-		Address:     "123 หมู่ 5 ตำบลทดสอบ อำเภอเมือง จังหวัดทดสอบ",
-		FirstName:   "สมชาย",
-		LastName:    "ใจดี",
-	}
+	
 
-	result := db.FirstOrCreate(&seller, entity.Seller{Username: seller.Username})
-	if result.Error != nil {
-		log.Println("เพิ่มผู้ขายล้มเหลว:", result.Error)
-	} else {
-		fmt.Println("เพิ่มผู้ขาย:", seller.Username)
-	}
-	newSeller := entity.Seller{
-		Username:    "seller2",
-		Password:    "password2",
-		PhoneNumber: "0987654321",
-		Address:     "123 หมู่บ้านใหม่",
-		FirstName:   "สมชาย",
-		LastName:    "ใจดี",
-	}
-
-	if err := db.Create(&newSeller).Error; err != nil {
-		log.Println("เพิ่มผู้ขายล้มเหลว:", err)
-	} else {
-		log.Println("เพิ่มผู้ขายสำเร็จ:", newSeller)
-	}
 
 	categoriesProduct := []entity.Category{
 		{Name: "เสื้อผ้าแฟชั่น"},

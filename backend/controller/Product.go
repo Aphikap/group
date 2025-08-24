@@ -70,3 +70,37 @@ func CreateProduct(c *gin.Context) {
 		"product": product,
 	})
 }
+
+
+func ListAllProducts(c *gin.Context){
+	var posts []entity.Post_a_New_Product
+	
+	if err := config.DB().
+		Preload("Product.ProductImage").Preload("Category").Preload("Seller").
+		Find(&posts).Error; err != nil {
+			c.JSON(http.StatusInternalServerError,gin.H{"error":"ไม่สามารถดึงข้อมูลสินค้าได้"})
+			return
+		}
+		c.JSON(http.StatusOK,gin.H{"data":posts})
+}
+
+func ListMyPostProducts(c *gin.Context){
+	sellerID,exists := c.Get("id")
+	if !exists{
+		c.JSON(http.StatusUnauthorized,gin.H{"error":"ไม่พอ seller ID"})
+		return
+	}
+
+	var posts []entity.Post_a_New_Product
+    if err := config.DB().
+        Where("seller_id = ?", sellerID).
+        Preload("Product.ProductImage").
+        Preload("Category").
+        Preload("Seller").
+        Find(&posts).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถดึงข้อมูลโพสต์สินค้าได้"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"data": posts})
+}

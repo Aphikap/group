@@ -8,12 +8,9 @@ import Layout from "../layout/Layout";
 import RegisterForm from "../authentication/Register";
 import LoginForm from "../authentication/Login";
 import ProtectRouteUser from "./ProtectRouteUser";
+import EditShopProfile from "../ShopProfile/EditShopProfile/EditShopProfile";
 
-const demoProducts = [
-  { id: 1, name: "เสื้อเชิ้ตผู้ชาย", category: "เสื้อผ้าแฟชั่น", price: 350, image: "/img2.jpg" },
-  { id: 2, name: "หูฟัง Bluetooth", category: "อิเล็กทรอนิกส์", price: 900, image: "/img3.jpg" },
-  { id: 3, name: "น้ำพริกปลาร้า", category: "อาหาร", price: 80, image: "/img4.jpg" },
-];
+
 
 const router = createBrowserRouter([
   {
@@ -22,7 +19,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Productlist /> },
       { path: "login", element: <LoginForm /> },
-      
+
       { path: "register", element: <RegisterForm /> },
       { path: "*", element: <Navigate to="/" replace /> },
     ],
@@ -34,19 +31,8 @@ const router = createBrowserRouter([
       { index: true, element: <Productlist /> },
       { path: "create-post", element: <PostProduct /> },
       { path: "create-profile", element: <Shopprofile /> },
-      {
-        path: "profile",
-        element: (
-          <Profile
-            shopName="SUT Market"
-            slogan="ส่งไว ราคาน่ารัก"
-            description="ร้านของเรามีสินค้าหลากหลาย ทั้งแฟชั่น ไอที และของใช้จำเป็น"
-            logoUrl="/img1.jpg"
-            categories={["เสื้อผ้าแฟชั่น", "อิเล็กทรอนิกส์", "อาหาร"]}
-            products={demoProducts}
-          />
-        ),
-      },
+      {path: "profile",element:<Profile/>},
+      {path: "profile/edit",element:<EditShopProfile/>},
       { path: "*", element: <Navigate to="/user" replace /> },
     ],
   },
