@@ -1,150 +1,120 @@
-import { useEffect, useState } from 'react';
-import UploadLogo from './UploadLogo';
-import { Divider, Col, Row, Button, Form, Input, message, Radio } from 'antd';
-import { ShoppingCartOutlined, UploadOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
-import './index.css';
-import { useForm } from 'antd/es/form/Form';
-import type { RcFile } from 'antd/es/upload';
-import type { ShopProfilePayload } from '../../../../interfaces/ShopProfilePayload';
+import { useState } from "react";
+import { Steps, Form, Input, Button, message, Radio, Row, Col } from "antd";
+import axios from "axios";
 
+import UploadLogo from "./UploadLogo";
+import type { RcFile } from "antd/es/upload";
+import { useNavigate } from "react-router-dom";
+import useEcomStore from "../../../store/ecom-store";
 
-import axios from 'axios';
-import useEcomStore from '../../../store/ecom-store';
-
-function ShopProfileForm() {
-  const user = useEcomStore((s: any) => s.user);
-  const navigate = useNavigate();
-  const [form] = useForm();
+export default function SellerShopWizardOneShot() {
+  const [current, setCurrent] = useState(0);
+  const [sellerForm] = Form.useForm();
+  const [shopForm] = Form.useForm();
   const [logoFile, setLogoFile] = useState<RcFile | null>(null);
-const [messageApi, contextHolder] = message.useMessage();
+  const [loading, setLoading] = useState(false);
+
+  const refreshUser = useEcomStore((s: any) => s.refreshUser);
+  const navigate = useNavigate();
+  const [sellerData, setSellerData] = useState<{ name: string; address: string } | null>(null);
+
+  const steps = [{ title: "ข้อมูลผู้ขาย" }, { title: "ข้อมูลร้านค้า" }];
+
+  const nextFromSeller = async () => {
+    try {
+      const values = await sellerForm.validateFields(); // { name, address }
+      setSellerData(values);                            // <-- เก็บไว้ก่อน
+      setCurrent(1);
+    } catch { }
+  };
 
 
+  const submitAll = async () => {
+    try {
+      await shopForm.validateFields();
 
-  const hasShop = useEcomStore((state:any) => state.hasShop);
+      if (!sellerData) {
+        message.error("ข้อมูลผู้ขายหาย กรุณากลับไปกรอกใหม่");
+        setCurrent(0);
+        return;
+      }
 
-  useEffect(() => {
-    if (hasShop) {
-      message.warning("คุณมีร้านค้าอยู่แล้ว");
-      navigate("/user"); // หรือ path ที่คุณต้องการ
+      const v = shopForm.getFieldsValue();
+
+      let logoPath = v.logo_path;
+      if (logoFile) {
+        const fd = new FormData();
+        fd.append("file", logoFile);
+        const up = await axios.post("/api/upload-logo", fd, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        logoPath = up.data?.url;
+      }
+      if (!logoPath) {
+        message.error("กรุณาอัปโหลดโลโก้ร้าน");
+        return;
+      }
+
+      const payload = {
+        seller_name: sellerData.name,       // ✅ ส่งจาก state
+        seller_address: sellerData.address, // ✅ ส่งจาก state
+        shop_name: v.shop_name,
+        slogan: v.slogan,
+        shop_description: v.shop_description,
+        category_id: Number(v.shopCategoryID),
+        logo_path: logoPath,
+        address: {
+          address: v.address,
+          sub_district: v.sub_district,
+          district: v.district,
+          province: v.province,
+        },
+      };
+
+      await axios.post("/api/seller-shop", payload, {
+        headers: { "Content-Type": "application/json" },
+      });
+      await refreshUser();
+      message.success("สร้างผู้ขายและร้านค้าเรียบร้อย");
+      navigate("/user/profile");
+    } catch (err: any) {
+      if (err?.errorFields) return;
+      const msg = err?.response?.data?.message || err?.response?.data?.error || "ไม่สำเร็จ";
+      message.error(msg);
+    } finally {
+      setLoading(false);
     }
-  }, [[hasShop]]);
-
- const onFinish = async (values: any) => {
-  if (!logoFile) {
-    messageApi.error('กรุณาอัปโหลดภาพโลโก้');
-    return;
-  }
-
-  try {
-    const formData = new FormData();
-    formData.append('file', logoFile);
-
-    const res = await axios.post('http://localhost:8080/api/upload-logo', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-
-    const imageUrl = res.data.url;
-
-    const payload: ShopProfilePayload = {
-      shop_name: values.shop_name,
-      slogan: values.slogan,
-      shop_description: values.shop_description,
-      logo_path: imageUrl,
-      address: {
-        address: values.address,
-        sub_district: values.sub_district,
-        district: values.district,
-        province: values.province,
-      },
-      category_id: Number(values.shopCategoryID),
-      seller_id: user.id,
-    };
-
-    console.log('ส่งฟอร์มพร้อม:', payload);
-    await axios.post('http://localhost:8080/api/shop-profiles', payload);
-
-    messageApi.success('ส่งฟอร์มสำเร็จ');
-    useEcomStore.getState().hasShop = true;
-    navigate('/user/profile'); // ✅ เปลี่ยนหน้าหลังจากสำเร็จ
-  } catch (error: any) {
-  if (axios.isAxiosError(error)) {
-    const errMsg = error.response?.data?.error || 'เกิดข้อผิดพลาดขณะสร้างร้านค้า';
-    console.error('API Error:', errMsg);
-    messageApi.error(errMsg);  // ✅ แสดงข้อความจาก backend
-  } else {
-    console.error('Unknown Error:', error);
-    messageApi.error('เกิดข้อผิดพลาดไม่ทราบสาเหตุ');
-  }
-}
-
-};
+  };
 
 
   return (
-    <>
-      {contextHolder}
-      <div className="container">
-        
+    <div style={{ maxWidth: 900, margin: "0 auto" }}>
+      <Steps current={current} items={steps} style={{ margin: "16px 0 24px" }} />
 
-        <Form
-          form={form}
-          name="wrap"
-          labelAlign="right"
-          labelCol={{ span: 8 }}
-          wrapperCol={{ span: 12 }}
-          colon={false}
-          style={{ maxWidth: '1000px', margin: '0 auto' }}
-          onFinish={onFinish}
-        >
+      {current === 0 && (
+        <Form form={sellerForm} layout="vertical">
+          <Form.Item label="ชื่อผู้ขาย" name="name" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item label="ที่อยู่ผู้ขาย" name="address" rules={[{ required: true }]}>
+            <Input.TextArea rows={3} />
+          </Form.Item>
+          <Button type="primary" onClick={nextFromSeller}>ถัดไป</Button>
+        </Form>
+      )}
 
-          <Form.Item
-            label="โลโก้ร้าน"
-            name="logo_path"
-            rules={[{ required: true, message: 'กรุณาอัปโหลดภาพโลโก้' }]}
-          >
-            <UploadLogo
-              onFileChange={(file) => {
-                setLogoFile(file);
-                form.setFieldsValue({ logo_path: file ? 'uploaded' : undefined });
-              }}
-            />
+      {current === 1 && (
+        <Form form={shopForm} layout="vertical">
+          <Form.Item label="โลโก้ร้าน" name="logo_path" rules={[{ required: true, message: "กรุณาอัปโหลดโลโก้หรือใส่ URL" }]}>
+            <UploadLogo onFileChange={(f) => { setLogoFile(f); shopForm.setFieldsValue({ logo_path: "uploaded" }) }} />
           </Form.Item>
 
-
-          <Divider style={{ borderColor: 'black' }} />
-          <div className='form2'>
-            <div>
-              <Form.Item
-                label={<span style={{ fontSize: '16px' }}>ชื่อร้านค้า</span>}
-                name="shop_name"
-                rules={[{ required: true, message: 'กรุณากรอกชื่อร้านค้า' }]}
-              >
-                <Input />
-              </Form.Item>
-
-              <Form.Item
-                label={<span style={{ fontSize: '16px' }}>สโลแกนร้านค้า</span>}
-                name="slogan"
-                rules={[{ required: true, message: 'กรุณากรอกราคา' }]}
-              >
-                <Input />
-              </Form.Item>
-
-              <Form.Item
-                label={<span style={{ fontSize: '16px' }}>คำอธิบายร้านค้า</span>}
-                name="shop_description"
-                rules={[{ required: true, message: 'กรุณากรอกรายละเอียด' }]}
-              >
-                <Input.TextArea rows={4} />
-              </Form.Item>
-
-
-              <Form.Item
-                label={<span style={{ fontSize: '16px' }}>หมวดหมู่ร้านค้า</span>}
-                name="shopCategoryID"
-                rules={[{ required: true, message: 'กรุณาเลือกหมวดหมู่ร้านค้า' }]}
-              >
+          <Row gutter={[24, 8]}>
+            <Col xs={24} md={12}>
+              <Form.Item label="ชื่อร้านค้า" name="shop_name" rules={[{ required: true }]}><Input /></Form.Item>
+              <Form.Item label="สโลแกน" name="slogan" rules={[{ required: true }]}><Input /></Form.Item>
+              <Form.Item label="คำอธิบาย" name="shop_description" rules={[{ required: true }]}><Input.TextArea rows={4} /></Form.Item>
+              <Form.Item label="หมวดหมู่ร้านค้า" name="shopCategoryID" rules={[{ required: true }]}>
                 <Radio.Group>
                   <Row gutter={[0, 8]}>
                     <Col span={12}><Radio value={1}>เสื้อผ้าแฟชั่น</Radio></Col>
@@ -155,55 +125,22 @@ const [messageApi, contextHolder] = message.useMessage();
                   </Row>
                 </Radio.Group>
               </Form.Item>
-            </div>
-            <div>
-              <Form.Item
-                label={<span style={{ fontSize: '16px' }}>ที่อยู่</span>}
-                name="address"
-                rules={[{ required: true, message: 'กรุณากรอกที่อยู่' }]}
-              >
-                <Input />
-              </Form.Item>
+            </Col>
 
-              <Form.Item
-                label={<span style={{ fontSize: '16px' }}>ตำบล/แขวง</span>}
-                name="sub_district"
-                rules={[{ required: true, message: 'กรุณากรอกตำบล/แขวง' }]}
-              >
-                <Input />
-              </Form.Item>
+            <Col xs={24} md={12}>
+              <Form.Item label="ที่อยู่" name="address" rules={[{ required: true }]}><Input /></Form.Item>
+              <Form.Item label="ตำบล/แขวง" name="sub_district" rules={[{ required: true }]}><Input /></Form.Item>
+              <Form.Item label="อำเภอ/เขต" name="district" rules={[{ required: true }]}><Input /></Form.Item>
+              <Form.Item label="จังหวัด" name="province" rules={[{ required: true }]}><Input /></Form.Item>
+            </Col>
+          </Row>
 
-              <Form.Item
-                label={<span style={{ fontSize: '16px' }}>อำเภอ/เขต</span>}
-                name="district"
-                rules={[{ required: true, message: 'กรุณากรอกอำเภอ/เขต' }]}
-              >
-                <Input />
-              </Form.Item>
-
-              <Form.Item
-                label={<span style={{ fontSize: '16px' }}>จังหวัด</span>}
-                name="province"
-                rules={[{ required: true, message: 'กรุณากรอกจังหวัด' }]}
-              >
-                <Input />
-              </Form.Item>
-            </div>
+          <div style={{ display: "flex", gap: 8, justifyContent: "space-between", marginTop: 8 }}>
+            <Button onClick={() => setCurrent(0)}>ย้อนกลับ</Button>
+            <Button type="primary" onClick={submitAll} loading={loading}>บันทึก</Button>
           </div>
-          <Form.Item wrapperCol={{ span: 24 }} style={{ textAlign: 'center', marginTop: '24px' }}>
-            <Button
-              icon={<UploadOutlined />}
-              style={{ background: '#fe7e01', color: 'white' }}
-              htmlType="submit"
-            >
-              Submit
-            </Button>
-          </Form.Item>
         </Form>
-      </div>
-
-    </>
+      )}
+    </div>
   );
 }
-
-export default ShopProfileForm;

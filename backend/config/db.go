@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"example.com/sa-example2/entity"
+	"example.com/GROUB/entity"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -17,7 +17,7 @@ func DB() *gorm.DB {
 
 func ConnectionDB() {
 
-	database, err := gorm.Open(sqlite.Open("sa.db?cache=shared"), &gorm.Config{})
+	database, err := gorm.Open(sqlite.Open("groub.db?cache=shared"), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}
@@ -35,6 +35,10 @@ func SetupDatabase() {
 		&entity.ShopAddress{},
 		&entity.ShopCategory{},
 		&entity.ShopProfile{},
+		&entity.Member{},
+		&entity.Gender{},
+		&entity.People{},
+		
 	)
 	categories := []entity.ShopCategory{
 		{CategoryName: "เสื้อผ้าแฟชั่น"},
@@ -70,6 +74,20 @@ func SetupDatabase() {
 			log.Println("เพิ่ม Category สินค้าล้มเหลว:", result.Error)
 		} else {
 			fmt.Println("เพิ่ม Category สินค้า:", cat.Name)
+		}
+	}
+
+	genders := []entity.Gender{
+		{Gender: "ชาย"},
+		{Gender: "หญิง"},
+		
+	}
+	for _, g := range genders {
+		result := db.FirstOrCreate(&g, entity.Gender{Gender: g.Gender})
+		if result.Error != nil {
+			log.Println("เพิ่มเพศล้มเหลว:", result.Error)
+		} else {
+			fmt.Println("เพิ่มเพศ:", g.Gender)
 		}
 	}
 }

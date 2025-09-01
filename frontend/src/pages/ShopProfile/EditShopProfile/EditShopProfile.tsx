@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import UploadLogo from '../Createshop/UploadLogo';
 import { Divider, Col, Row, Button, Form, Input, message, Radio } from 'antd';
 import { UploadOutlined } from '@ant-design/icons'; // [CHANGED] ลบไอคอนที่ไม่ใช้
-import { useNavigate } from 'react-router-dom';
+import {  useNavigate } from 'react-router-dom';
 import '../Createshop/index.css';
 import { useForm } from 'antd/es/form/Form';
 import type { RcFile } from 'antd/es/upload';
@@ -99,7 +99,7 @@ function EditShopProfile() { // [CHANGED] เปลี่ยนชื่อค�
       }
 
       // 2) สร้าง payload แบบ partial เฉพาะฟิลด์ที่เปลี่ยน
-      const body: any = { seller_id: user?.id }; // ต้องมีตาม backend ของคุณ
+      const body: any = { seller_id: user?.id }; 
 
       if (!init || values.shop_name !== init.shop_name) {
         body.shop_name = values.shop_name;
@@ -155,6 +155,7 @@ function EditShopProfile() { // [CHANGED] เปลี่ยนชื่อค�
         setInit({ ...init, logo_path: newLogoUrl });
       }
       setLogoFile(null);
+      navigate('/user/profile');
     } catch (error: any) {
       const errMsg = error?.response?.data?.error || 'อัปเดตร้านค้าไม่สำเร็จ';
       messageApi.error(errMsg);

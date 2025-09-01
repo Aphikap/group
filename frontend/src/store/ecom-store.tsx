@@ -3,67 +3,163 @@ import axios from "axios";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { LoginRequest } from "../../interfaces/Login";
+import _ from "lodash"
 
-// ต้อง forward useEcomStore เพื่อใช้ใน clearPersistedStore
-let useEcomStore: any;
+axios.defaults.baseURL = "http://localhost:8080";
 
-const ecomstore = (set: any) => ({
+type User = {
+  id: number;
+  username: string;
+  people?: any;
+  sellerID?: number | null; // ✅ เก็บ sellerID ใน user
+  hasShop?: boolean;
+};
+
+type StoreState = {
+  user: User | null;
+  token: string | null;
+  hasShop: boolean | null;
+  carts:[];
+
+  actionLogin: (values: LoginRequest) => Promise<{ user: User; token: string; hasShop: boolean }>;
+  actionRegister: (values: any) => Promise<{ user: User; token?: string }>;
+
+  refreshUser: () => Promise<User | null>;
+  logout: () => void;
+  clearPersistedStore: () => void;
+  actionAddtoCart:(product:any) =>void;
+
+  authHeader: () => { Authorization?: string };
+};
+
+const ecomstore = (set: any, get: any): StoreState => ({
   user: null,
   token: null,
   hasShop: null,
+  carts:[],
 
-  // ✅ แก้ไข: เคลียร์ token ทันทีเมื่อ login ผิด
-  actionLogin: async (values: LoginRequest) => {
+  actionAddtoCart:(product)=>{
+    const carts = get().carts
+    const updateCart = [...carts,{...product,count:1}]
+    
+    //step uniq
+    const uniqe = _.unionWith(updateCart,_.isEqual)
+
+    set({carts: uniqe})
+    console.log('Click add in zustand',uniqe)
+  },
+
+  // ---------- LOGIN ----------
+  actionLogin: async (values) => {
     try {
-      // 1) login
-      const res = await axios.post("http://localhost:8080/api/login", values);
-
-      const token = res.data?.token;
-      const payload = res.data?.payload;
-
-      // เก็บลง store ก่อน
-      set({
-        user: payload || null,
-        token: token || null,
-        hasShop: null,
+      const res = await axios.post("/api/login", values, {
+        headers: { "Content-Type": "application/json" },
       });
 
-      // 2) current-user
-      let has = false;
-      if (token) {
-        const me = await axios.get("http://localhost:8080/api/current-user", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        has = !!me.data?.has_shop;
-        set({ hasShop: has });
+      const user: User | null = res.data?.user || null;
+      const token: string | null = res.data?.token || null;
+
+      if (!user || !token) {
+        set({ user: null, token: null, hasShop: null });
+        throw new Error(res.data?.message || "Invalid login response");
       }
 
-      return { res, hasShop: has };
+      // ถ้ามี hasShop มากับ payload ก็ใช้เลย ไม่ก็ประเมินจากการมี sellerID
+      const hasShop =
+        typeof user.hasShop === "boolean" ? user.hasShop : user.sellerID != null;
+
+      // ✅ บังคับ normalize sellerID เป็น number | null
+      const normalizedUser: User = { ...user, sellerID: user.sellerID ?? null };
+
+      set({ user: normalizedUser, token, hasShop });
+      return { user: normalizedUser, token, hasShop };
     } catch (error) {
-      // ❌ login fail → เคลียร์ state
       set({ user: null, token: null, hasShop: null });
       throw error;
     }
   },
 
-  // ✅ ปรับ logout ให้ล้าง state อย่างเดียว
-  logout: () => {
-    set({ user: null, token: null, hasShop: null });
+  // ---------- REGISTER ----------
+  actionRegister: async (values) => {
+    const res = await axios.post("/api/register", values, {
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const user: User | null = res.data?.user || null;
+    const token: string | null = res.data?.token || null;
+
+    if (!user) throw new Error(res.data?.message || "Invalid register response");
+
+    const hasShop =
+      typeof user.hasShop === "boolean" ? user.hasShop : user.sellerID != null;
+
+    const normalizedUser: User = { ...user, sellerID: user.sellerID ?? null };
+
+    // บางระบบสมัครสำเร็จแต่ยังไม่ออก token -> เก็บเฉพาะ user ตอนนี้
+    set({
+      user: token ? normalizedUser : null,
+      token: token || null,
+      hasShop: token ? hasShop : null,
+    });
+
+    return { user: normalizedUser, token: token || undefined };
   },
 
-  // ✅ เพิ่ม: ฟังก์ชันล้างทั้ง storage และ state
+  // ---------- AUTH HEADER ----------
+  authHeader: () => {
+    const token = get().token;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  },
+
+  // ---------- REFRESH CURRENT USER ----------
+  refreshUser: async () => {
+    const token = get().token;
+    if (!token) return null;
+
+    try {
+      const res = await axios.get("/api/current-user", {
+        headers: get().authHeader(),
+      });
+
+      const user: User | null = res.data?.user || null;
+
+      // API ส่ง has_shop มาด้วย (จาก controller.CurrentUser)
+      const hasShop =
+        typeof res.data?.has_shop === "boolean"
+          ? res.data.has_shop
+          : (user?.hasShop ?? (user?.sellerID != null));
+
+      if (!user) return null;
+
+      const normalizedUser: User = { ...user, sellerID: user.sellerID ?? null };
+
+      set({ user: normalizedUser, hasShop });
+      return normalizedUser;
+    } catch (err: any) {
+      if (err?.response?.status === 401) {
+        set({ user: null, token: null, hasShop: null });
+      }
+      throw err;
+    }
+  },
+
+  // ---------- LOGOUT ----------
+  logout: () => set({ user: null, token: null, hasShop: null }),
+
+  // ---------- CLEAR PERSISTED ----------
   clearPersistedStore: () => {
-    useEcomStore.persist.clearStorage(); // ล้าง localStorage
-    set({ user: null, token: null, hasShop: null }); // ล้างในหน่วยความจำ
+    // ต้องถูกเรียกหลัง useEcomStore ถูกประกาศ (ดูบล็อคด้านล่าง)
+    useEcomStore.persist.clearStorage();
+    set({ user: null, token: null, hasShop: null });
   },
 });
 
-// ส่วน persist เหมือนเดิม
-const userPersist = {
-  name: "ecom-store",
-  storage: createJSONStorage(() => localStorage),
-};
+// สร้าง store + persist ลง localStorage
+const useEcomStore = create<StoreState>()(
+  persist(ecomstore, {
+    name: "ecom-store",
+    storage: createJSONStorage(() => localStorage),
+  })
+);
 
-// ✅ สร้าง store แล้วผูกกลับให้ใช้ใน clearPersistedStore ได้
-useEcomStore = create(persist(ecomstore, userPersist));
 export default useEcomStore;

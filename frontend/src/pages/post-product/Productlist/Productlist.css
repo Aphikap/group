@@ -9,6 +9,9 @@
   --line: #f0f0f0;
   --card: #fff;
 }
+.shop-name:hover {
+  color: #1890ff; /* น้ำเงินโทน Ant Design */
+}
 
 /* ---- Layout ---- */
 .containerlist {
@@ -98,4 +101,118 @@
   }
   .image-content .title { font-size: 12px; }
   .image-content .price { font-size: 14px; }
+}
+
+.cart-drawer {
+  padding: 8px;
+}
+
+/* กล่องสินค้า */
+.cart-item {
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.cart-item-image {
+  width: 60px;
+  height: 60px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  color: #999;
+  background: #f9f9f9;
+}
+
+.cart-item-details {
+  flex: 1;
+}
+
+.cart-item-details h4 {
+  margin: 0 0 4px 0;
+}
+
+.cart-item-details p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.cart-item-qty {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.cart-item-price {
+  text-align: right;
+}
+
+.cart-item-price .price {
+  color: #1677ff;
+  font-weight: 600;
+}
+
+.cart-item-price .remove {
+  margin-top: 6px;
+  color: red;
+  cursor: pointer;
+}
+
+/* รวมราคา */
+.cart-total {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  padding: 8px 0;
+  border-top: 1px solid #eee;
+  margin-top: 12px;
+}
+
+/* ปุ่มชำระเงิน */
+.cart-checkout-btn {
+  width: 100%;
+  background: #00b96b;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-top: 12px;
+  cursor: pointer;
+}
+
+
+/* ปุ่มจำนวน */
+.cart-item-qty button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cart-item-qty span {
+  min-width: 28px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
 }

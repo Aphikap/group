@@ -25,6 +25,7 @@ const Navbar = () => {
   return (
     <div className="background-header">
       <div className="header-row">
+        
         <div className="header-left">
           <Link to="/product-list" className="no-border-button left-font-size-large">
 
@@ -43,7 +44,14 @@ const Navbar = () => {
             ShopProfile
             <span>|</span>
           </button>
-          )}
+          )} 
+
+           <Link to="/Cart" className="no-border-button left-font-size-large">
+
+            <button className="no-border-button left-font-size-large">
+              Cart
+            </button>
+          </Link>
 
           {token &&
             (

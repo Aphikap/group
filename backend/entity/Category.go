@@ -1,3 +1,4 @@
+// entity/category.go
 package entity
 
 import "gorm.io/gorm"

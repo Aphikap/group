@@ -20,6 +20,6 @@ type ShopProfile struct {
 	ShopCategoryID *uint        `json:"shopCategoryID"`
 	Category       ShopCategory `gorm:"foreignKey:ShopCategoryID"`
 
-	SellerID *uint   `gorm:"unique" json:"seller_id"`
+	SellerID *uint   `gorm:"uniqueIndex:ux_shop_seller" json:"seller_id"`
 	Seller   *Seller `gorm:"foreignKey:SellerID;references:ID"`
 }

@@ -4,9 +4,11 @@ import (
 	"time"
 
 	// เปลี่ยนตามโมดูลคุณ
-	"example.com/sa-example2/controller"
-	middleware "example.com/sa-example2/middlewares"
 
+	// "example.com/GROUB/controller"
+	"example.com/GROUB/middlewares"
+
+	"example.com/GROUB/controller"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -29,28 +31,33 @@ func SetupRouter() *gin.Engine {
 	api := r.Group("/api")
 	{
 		//upload
+		// api.POST("/upload-logo",middlewares.auth ,controller.auth)
+		api.POST("/register", controller.Register)
+		api.POST("/login", controller.Login)
 		api.POST("/upload-logo", controller.UploadLogo)
 		api.POST("/upload-Product", controller.UploadProductImages)
-
-		// เพิ่ม Create
-		api.POST("/shop-profiles", controller.CreateShopProfile)
 		api.POST("/post-Product", controller.CreateProduct)
+		api.POST("/seller-shop", middleware.Authz(), controller.CreateSellerAndShop)
+		api.GET("/current-user", middleware.Authz(), controller.CurrentUser)
+		api.GET("/ListMyProfile", middleware.Authz(), controller.ListMyProfile)
+		api.GET("/ListMyPostProducts", middleware.Authz(), controller.ListMyPostProducts)
+		api.GET("/listAllProducts", controller.ListAllProducts)
+		api.GET("/listCategory", controller.ListCategoies)
+		api.GET("/post-products/:id", middleware.Authz(), controller.GetPostProductByID)
+		api.PUT("/UpdateShopProfile", middleware.Authz(), controller.UpdateShopProfile)
+		api.PUT("/UpdateProduct", middleware.Authz(), controller.UpdateProduct)
+		api.POST("/CreateCategory", controller.CreateCategory)
+		api.GET("/shops/:sellerId/posts", controller.ListPostsBySeller)
+		api.GET("/shops/:sellerId/profile", controller.GetShopProfileBySellerID)
+		api.GET("/ListCShopCategory", controller.ListCShopCategory)
+		api.POST("/CreateCShopCategory", controller.CreateCShopCategory)
+		api.PUT("/categories/:id", controller.UpdateCategory)
+		api.DELETE("/categories/:id", controller.DeleteCategory)
 
-		//ดึงข้อมูล
-		api.GET("/listAllProducts",controller.ListAllProducts)
-		api.GET("/ListMyPostProducts",middleware.AuthGuard(),controller.ListMyPostProducts)
-		api.GET("/ListMyProfile",middleware.AuthGuard(),controller.ListMyProfile)
-		
-
-		//update
-		api.PUT("/UpdateShopProfile",middleware.AuthGuard(),controller.UpdateShopProfile)
-
-
-
-		//register login
-		api.POST("/register", controller.RegisterSeller)
-		api.POST("/login", controller.LoginSeller)
-		api.GET("/current-user", middleware.AuthGuard(), controller.CurrentSeller)
+		// ShopCategory (หมวดหมู่ร้าน)
+		api.PUT("/shopcategories/:id", controller.UpdateShopCategory)
+		api.DELETE("/shopcategories/:id", controller.DeleteShopCategory)
+		api.DELETE("/DeletePost/:id", middleware.Authz(), controller.SoftDeletePostWithProductAndImages)
 
 	}
 

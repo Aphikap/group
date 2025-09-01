@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"example.com/sa-example2/config"
-	"example.com/sa-example2/routes"
+	"example.com/GROUB/config"
+	"example.com/GROUB/routes"
 	"github.com/joho/godotenv"
 )
 
