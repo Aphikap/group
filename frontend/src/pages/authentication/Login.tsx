@@ -7,6 +7,7 @@ import useEcomStore from "../../store/ecom-store";
 const { Title, Text } = Typography; // ย้ายออกมานอก component ก็ได้
 
 export default function LoginForm() {
+  
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
   const [loading, setLoading] = useState(false);

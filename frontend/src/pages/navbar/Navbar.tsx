@@ -36,7 +36,6 @@ const Navbar = () => {
           <span>|</span>
           {token &&(
 
-
           <button
             onClick={handleClick}
             className="no-border-button left-font-size-large"

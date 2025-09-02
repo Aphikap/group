@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { ShoppingCartOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
-import { Button, Drawer } from 'antd';
+import { Badge, Button, Drawer } from 'antd';
 import useEcomStore from '../../../store/ecom-store';
 
 type Props = {
@@ -132,7 +132,7 @@ const Cardlistproduct = ({ filteredProducts }: Props) => {
                     {carts.map((item, index) => (
                         <div key={index} className="cart-item">
 
-                            <div className="cart-item-image"><img src={ `http://localhost:8080${item?.Product?.ProductImage?.[0]?.image_path}`}  /></div>
+                            <div className="cart-item-image"><img src={`http://localhost:8080${item?.Product?.ProductImage?.[0]?.image_path}`} /></div>
 
                             <div className="cart-item-details">
                                 <h4>{item.Product.name}</h4>
@@ -146,7 +146,7 @@ const Cardlistproduct = ({ filteredProducts }: Props) => {
 
                             <div className="cart-item-price">
                                 <div className="price">{item.Product.price * item.count}</div>
-                                <button className="remove"  onClick={() => actionRemoveProduct(item.ID)}>🗑️</button>
+                                <button className="remove" onClick={() => actionRemoveProduct(item.ID)}>🗑️</button>
                             </div>
 
                         </div>
@@ -168,13 +168,13 @@ const Cardlistproduct = ({ filteredProducts }: Props) => {
                     zIndex: 1000,        // ให้ลอยอยู่เหนือ element อื่น
                 }}
             >
-                <Button
-                    size="small"
-                    icon={<ShoppingCartOutlined />}
-                    onClick={() => {
-                        showDrawer();
-                    }}
-                />
+
+                <Link to="/Cart">
+                    <Badge count={carts.length} offset={[0, 6]}>
+                        <Button size="small" icon={<ShoppingCartOutlined />} />
+                    </Badge>
+                </Link>
+
             </div>
 
         </div>
