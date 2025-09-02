@@ -47,6 +47,7 @@ const Cardcategory = ({ categories, selectedCategory, setSelectedCategory }: Pro
                     </li>
                 ))}
             </ul>
+            
         </>
     )
 }

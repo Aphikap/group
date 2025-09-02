@@ -19,15 +19,18 @@ type StoreState = {
   user: User | null;
   token: string | null;
   hasShop: boolean | null;
-  carts:[];
+  carts: [];
 
   actionLogin: (values: LoginRequest) => Promise<{ user: User; token: string; hasShop: boolean }>;
   actionRegister: (values: any) => Promise<{ user: User; token?: string }>;
 
   refreshUser: () => Promise<User | null>;
   logout: () => void;
+  GettotalPrice: () => number;
   clearPersistedStore: () => void;
-  actionAddtoCart:(product:any) =>void;
+  actionUpdateQuantity: (PostId: any, newQuantity: any) => void;
+  actionAddtoCart: (product: any) => void;
+  actionRemoveProduct: (PostId: any) => void;
 
   authHeader: () => { Authorization?: string };
 };
@@ -36,17 +39,41 @@ const ecomstore = (set: any, get: any): StoreState => ({
   user: null,
   token: null,
   hasShop: null,
-  carts:[],
+  carts: [],
 
-  actionAddtoCart:(product)=>{
+  actionAddtoCart: (product) => {
     const carts = get().carts
-    const updateCart = [...carts,{...product,count:1}]
-    
-    //step uniq
-    const uniqe = _.unionWith(updateCart,_.isEqual)
+    const updateCart = [...carts, { ...product, count: 1 }]
 
-    set({carts: uniqe})
-    console.log('Click add in zustand',uniqe)
+    //step uniq
+    const uniqe = _.unionWith(updateCart, _.isEqual)
+
+    set({ carts: uniqe })
+
+  },
+  actionUpdateQuantity: (postID, newQuantity) => {
+    console.log('update', postID, newQuantity)
+    set((state: any) => ({
+      carts: state.carts.map((item: any) =>
+        item.ID === postID
+          ?{...item,count:Math.max(1,newQuantity)}
+          :item
+        )
+
+
+    }))
+  },
+  actionRemoveProduct:(postID:any) =>{
+    set((state:any)=>({
+      carts: state.carts.filter((item:any)=>
+        item.ID !== postID
+      )
+    }))
+  },
+  GettotalPrice:()=>{
+    return get().carts.reduce(( total:any,item:any)=>{
+      return total + item.Product.price * item.count
+    },0)
   },
 
   // ---------- LOGIN ----------

@@ -9,6 +9,11 @@ type Props = {
 };
 const Cardlistproduct = ({ filteredProducts }: Props) => {
     const actionAddtoCart = useEcomStore((state) => state.actionAddtoCart)
+    const actionUpdateQuantity = useEcomStore((state) => state.actionUpdateQuantity)
+    const actionRemoveProduct = useEcomStore((state) => state.actionRemoveProduct)
+    const GettotalPrice = useEcomStore((state) => state.GettotalPrice)
+    const carts = useEcomStore((state) => state.carts) as any[];
+    console.log(carts)
     const [open, setOpen] = useState(false);
 
     const showDrawer = () => setOpen(true);
@@ -124,34 +129,57 @@ const Cardlistproduct = ({ filteredProducts }: Props) => {
                 width={360}
             >
                 <div className="cart-drawer">
-                    <div className="cart-item">
-                        <div className="cart-item-image">No Image</div>
+                    {carts.map((item, index) => (
+                        <div key={index} className="cart-item">
 
-                        <div className="cart-item-details">
-                            <h4>Title</h4>
-                            <p>Description</p>
-                            <div className="cart-item-qty">
-                                <button>- </button>
-                                <span>1</span>
-                                <button>+</button>
+                            <div className="cart-item-image"><img src={ `http://localhost:8080${item?.Product?.ProductImage?.[0]?.image_path}`}  /></div>
+
+                            <div className="cart-item-details">
+                                <h4>{item.Product.name}</h4>
+                                <p>{item.Product.description}</p>
+                                <div className="cart-item-qty">
+                                    <button onClick={() => actionUpdateQuantity(item.ID, item.count - 1)}>- </button>
+                                    <span>{item.count}</span>
+                                    <button onClick={() => actionUpdateQuantity(item.ID, item.count + 1)}>+</button>
+                                </div>
                             </div>
-                        </div>
 
-                        <div className="cart-item-price">
-                            <div className="price">1,000</div>
-                            <div className="remove">🗑️</div>
-                        </div>
-                    </div>
+                            <div className="cart-item-price">
+                                <div className="price">{item.Product.price * item.count}</div>
+                                <button className="remove"  onClick={() => actionRemoveProduct(item.ID)}>🗑️</button>
+                            </div>
 
+                        </div>
+                    ))}
                     <div className="cart-total">
                         <span>รวม</span>
-                        <span>5,000</span>
+                        <span>{GettotalPrice()}</span>
                     </div>
 
                     <button className="cart-checkout-btn">ดำเนินการชำระเงิน</button>
                 </div>
             </Drawer>
+
+            <div
+                style={{
+                    position: "fixed",   // ทำให้ปุ่มลอยอยู่กับที่
+                    top: 56,             // ระยะจากด้านบน (px)
+                    right: 16,           // ระยะจากด้านขวา (px)
+                    zIndex: 1000,        // ให้ลอยอยู่เหนือ element อื่น
+                }}
+            >
+                <Button
+                    size="small"
+                    icon={<ShoppingCartOutlined />}
+                    onClick={() => {
+                        showDrawer();
+                    }}
+                />
+            </div>
+
         </div>
+
+
     )
 }
 
