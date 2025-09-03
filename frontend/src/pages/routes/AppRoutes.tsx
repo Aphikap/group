@@ -14,6 +14,7 @@ import Category from "../../component/admin/Category";
 import CategoryShop from "../../component/admin/CategoryShop";
 import ShopPublic from "../ShopProfile/Profile/ShopPublic";
 import Cart from "../cart/Cart";
+import Createcode from "../DiscountCode/Createcode";
 
 
 
@@ -27,6 +28,7 @@ const router = createBrowserRouter([
       { path: "Admin", element: <AdminLayout /> },
       { path: "shop/:sellerId", element: <ShopPublic /> },
       { path: "Cart", element: <Cart /> },
+      
 
       { path: "register", element: <RegisterForm /> },
       { path: "*", element: <Navigate to="/" replace /> },
@@ -40,6 +42,7 @@ const router = createBrowserRouter([
       { index: true, element: <Category /> },
       { path: "category", element: <Category /> },
       { path: "shopcategory", element: <CategoryShop /> },
+      { path: "Createcode", element: <Createcode /> },
 
     ],
   },

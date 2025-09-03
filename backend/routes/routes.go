@@ -59,6 +59,11 @@ func SetupRouter() *gin.Engine {
 		api.DELETE("/shopcategories/:id", controller.DeleteShopCategory)
 		api.DELETE("/DeletePost/:id", middleware.Authz(), controller.SoftDeletePostWithProductAndImages)
 
+		api.GET("/discountcodes", controller.ListDiscountCodes)
+		api.POST("/discountcodes", controller.CreateDiscountCode)
+		api.PUT("/discountcodes/:id", controller.UpdateDiscountCode)
+		api.DELETE("/discountcodes/:id", controller.DeleteDiscountCode)
+
 	}
 
 	return r
