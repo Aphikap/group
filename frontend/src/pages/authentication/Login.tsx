@@ -15,7 +15,8 @@ export default function LoginForm() {
   const actionLogin = useEcomStore((state: any) => state.actionLogin);
   const token = useEcomStore((state: any) => state.token);   // ✅ ตั้งชื่อให้ตรงความจริง
   console.log("token from zustand:", token);
-
+ const isAdminUser = (u: any) =>
+    u?.role?.toLowerCase?.() === "admin" || u?.username?.toLowerCase?.() === "admin";
   const onFinish = async (values: LoginRequest) => {
     setLoading(true);
     try {
@@ -24,14 +25,18 @@ export default function LoginForm() {
       console.log("user:", user);
       console.log("hasShop:", hasShop);
       console.log("token:", token);
-
+       const admin = isAdminUser(user);
       messageApi.success({
         content: "Welcome back",
         duration: 1.0,
         onClose: () => {
-          // จะเลือกเส้นทางตาม hasShop ก็ได้
-          navigate("/");
-          // หรือ: navigate(hasShop ? "/shop" : "/create-shop");
+                 if (admin) {
+            navigate("/admin", { replace: true });
+          } else {
+            // เส้นทางผู้ใช้ปกติ (ปรับได้ตามที่ต้องการ)
+            // ถ้ามี shop แล้วอาจพาไปโปรไฟล์, ไม่มีก็โฮม
+            navigate("/");
+          }
         },
       });
     } catch (err: any) {

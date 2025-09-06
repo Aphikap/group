@@ -38,7 +38,7 @@ func SetupDatabase() {
 		&entity.Member{},
 		&entity.Gender{},
 		&entity.People{},
-		&entity.Discountcode{},
+		
 		
 	)
 	categories := []entity.ShopCategory{

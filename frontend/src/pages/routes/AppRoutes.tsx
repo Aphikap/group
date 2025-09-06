@@ -14,7 +14,8 @@ import Category from "../../component/admin/Category";
 import CategoryShop from "../../component/admin/CategoryShop";
 import ShopPublic from "../ShopProfile/Profile/ShopPublic";
 import Cart from "../cart/Cart";
-import Createcode from "../DiscountCode/Createcode";
+import ProtectRouteAdmin from "./ProtectRouteAdmin";
+
 
 
 
@@ -37,13 +38,12 @@ const router = createBrowserRouter([
 
   {
     path: "/admin",
-    element: <AdminLayout />,
+    element: <ProtectRouteAdmin element={<AdminLayout />} />, // ✅ ป้องกันที่นี่
     children: [
       { index: true, element: <Category /> },
       { path: "category", element: <Category /> },
       { path: "shopcategory", element: <CategoryShop /> },
-      { path: "Createcode", element: <Createcode /> },
-
+     
     ],
   },
   {

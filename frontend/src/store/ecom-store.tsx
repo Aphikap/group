@@ -41,16 +41,27 @@ const ecomstore = (set: any, get: any): StoreState => ({
   hasShop: null,
   carts: [],
 
-  actionAddtoCart: (product) => {
-    const carts = get().carts
-    const updateCart = [...carts, { ...product, count: 1 }]
+actionAddtoCart: (product: any) => {
+  set((state: any) => {
+    const exist = state.carts.find((item: any) => item.ID === product.ID);
 
-    //step uniq
-    const uniqe = _.unionWith(updateCart, _.isEqual)
-
-    set({ carts: uniqe })
-
-  },
+    if (exist) {
+      // ถ้ามีอยู่แล้ว → เพิ่มจำนวน
+      return {
+        carts: state.carts.map((item: any) =>
+          item.ID === product.ID
+            ? { ...item }
+            : item
+        ),
+      };
+    } else {
+      // ถ้ายังไม่มี → เพิ่มใหม่
+      return {
+        carts: [...state.carts, { ...product, count: 1 }],
+      };
+    }
+  });
+},
   actionUpdateQuantity: (postID, newQuantity) => {
     console.log('update', postID, newQuantity)
     set((state: any) => ({

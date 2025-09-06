@@ -32,6 +32,7 @@ const ShopProfile: React.FC = () => {
         if (!token) return;
         const res = await getMyPostProducts(token);
         const raw = res.data?.data || [];
+       
 
         const mapped: MappedProduct[] =
           raw.map((item: any) => {
@@ -65,6 +66,7 @@ const ShopProfile: React.FC = () => {
         if (!token) return;
         const res = await ListMyProfile(token);
         setShopInfo(res.data?.data);
+         console.log(res.data?.data)
       } catch (err) {
         console.error("โหลดข้อมูลร้านค้าล้มเหลว", err);
       }
